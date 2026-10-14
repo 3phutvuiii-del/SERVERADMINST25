@@ -242,10 +242,10 @@ export default function RolesManagementPage() {
   });
 
   const rawRoles = rolesData?.roles;
-  const roles = useMemo(() => {
-    if (!rawRoles) return [];
-    if (Array.isArray(rawRoles)) return rawRoles;
-    return Object.values(rawRoles);
+const roles = useMemo<DiscordRolePermissionItem[]>(() => {
+ if (!rawRoles) return [];
+ if (Array.isArray(rawRoles)) return rawRoles as DiscordRolePermissionItem[];
+    return Object.values(rawRoles) as DiscordRolePermissionItem[];
   }, [rawRoles]);
   const steamRoleAssignments = rolesData?.steamRoleAssignments || {};
 
