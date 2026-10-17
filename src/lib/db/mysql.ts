@@ -337,9 +337,9 @@ export async function saveSteamRoleAssignmentToDb(assign: DbSteamRoleAssignment)
       [assign.steamId, assign.playerName || null, assign.role, assign.roleTitle || null, assign.note || null, assign.assignedBy || 'System', assign.assignedAt]
     );
     return true;
-  } catch (err) {
-    console.warn('[MySQL] Error saving steam role assignment:', err);
-    return false;
+  } catch (err: any) {
+    console.error('[MySQL] Error saving steam role assignment:', err);
+    throw new Error(`Lỗi ghi Database MySQL: ${err.message || String(err)}`);
   }
 }
 
@@ -348,9 +348,9 @@ export async function removeSteamRoleAssignmentFromDb(steamId: string): Promise<
     const pool = getDbPool();
     await pool.query('DELETE FROM `steam_role_assignments` WHERE `steam_id` = ?', [steamId]);
     return true;
-  } catch (err) {
-    console.warn('[MySQL] Error deleting steam role assignment:', err);
-    return false;
+  } catch (err: any) {
+    console.error('[MySQL] Error deleting steam role assignment:', err);
+    throw new Error(`Lỗi xóa dữ liệu MySQL: ${err.message || String(err)}`);
   }
 }
 
@@ -369,8 +369,8 @@ export async function getRolePermissionsFromDb(): Promise<Record<string, any>> {
       };
     }
     return result;
-  } catch (err) {
-    console.warn('[MySQL] Error getting role permissions:', err);
+  } catch (err: any) {
+    console.error('[MySQL] Error getting role permissions:', err);
     return {};
   }
 }
@@ -390,9 +390,9 @@ export async function saveRolePermissionToDb(role: { roleName: string; descripti
       [role.roleName, role.description || null, role.badgeColor || '#3b82f6', permJson]
     );
     return true;
-  } catch (err) {
-    console.warn('[MySQL] Error saving role permission:', err);
-    return false;
+  } catch (err: any) {
+    console.error('[MySQL] Error saving role permission:', err);
+    throw new Error(`Lỗi cập nhật phân quyền MySQL: ${err.message || String(err)}`);
   }
 }
 

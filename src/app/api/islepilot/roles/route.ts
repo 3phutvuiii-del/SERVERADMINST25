@@ -19,7 +19,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const steamId = searchParams.get('steamId');
 
-    const roles = await getRolePermissionsFromDb();
+    let roles = await getRolePermissionsFromDb();
+
+    // Nếu database chưa có role hoặc truy vấn rỗng, tự động fallback danh sách DEFAULT_ST25_ROLES
+    if (!roles || Object.keys(roles).length === 0) {
+      const defaultRoleMap: Record<string, any> = {};
+      DEFAULT_ST25_ROLES.forEach((r) => {
+        defaultRoleMap[r.roleName] = { ...r };
+      });
+      roles = defaultRoleMap;
+    }
 
     if (steamId) {
       const player = await islePilotClient.getPlayerDetail(steamId);
@@ -139,6 +148,33 @@ export async function POST(request: NextRequest) {
         success: ok,
         message: ok ? `Đã thu hồi quyền của SteamID ${targetSteamId}` : 'Không tìm thấy SteamID',
         steamRoleAssignments: await getSteamRoleAssignmentsFromDb(),
+      });
+    }
+
+    // Khôi phục ma trận phân quyền về chuẩn ST25
+    if (action === 'reset') {
+      for (const r of DEFAULT_ST25_ROLES) {
+        await saveRolePermissionToDb(r);
+      }
+      return NextResponse.json({
+        success: true,
+        message: 'Đã khôi phục ma trận phân quyền mặc định ST25',
+        roles: await getRolePermissionsFromDb(),
+      });
+    }
+
+    // Xóa một role khỏi cấu hình
+    if (action === 'delete') {
+      const { roleName: targetDeleteRole } = body;
+      if (!targetDeleteRole) {
+        return NextResponse.json({ success: false, error: 'Thiếu tên role cần xóa' }, { status: 400 });
+      }
+      const pool = (await import('@/lib/db/mysql')).getDbPool();
+      await pool.query('DELETE FROM `role_permissions` WHERE `role_name` = ?', [targetDeleteRole]);
+      return NextResponse.json({
+        success: true,
+        message: `Đã xóa role ${targetDeleteRole}`,
+        roles: await getRolePermissionsFromDb(),
       });
     }
 
